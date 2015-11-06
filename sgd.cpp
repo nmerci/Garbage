@@ -37,6 +37,7 @@ std::vector<double> gradient_descent(
     for(int iteration = 0; iteration < max_iterations; ++iteration)
     {
         // calculate gradient
+        // forward difference approximation is used
         std::vector<double> grad_f(x.size());
         for(size_t i = 0; i < x.size(); ++i)
         {
@@ -91,13 +92,13 @@ void test_gradient_descent()
     const int max_iterations {10000};
     const double delta {0.001};
  
-    std::cout << "Test for simple gradient descent" << std::endl;
+    std::cout << "Testing simple gradient descent..." << std::endl;
     std::vector<double> result {gradient_descent(f, initial_x, step_size, tolerance, max_iterations, delta)};
  
     std::cout << "These values have to be close to zero: ";
     for(auto i:result)
         std::cout << i << " ";
-    std::cout << std::endl;
+    std::cout << std::endl << "Test complete" << std::endl;
 }
  
 std::vector<double> stochastic_gradient_descent(
@@ -123,21 +124,22 @@ std::vector<double> stochastic_gradient_descent(
  
     double f_x {std::accumulate(fs_x.cbegin(), fs_x.cend(), 0.0)};
  
-    // construct an array of indices 0, 1, 2, ...
+    // construct indices for target functions
     std::vector<size_t> indices(functions.size());
     std::iota(indices.begin(), indices.end(), 0);
  
     for(size_t iteration = 0; iteration < max_iterations / functions.size(); ++iteration)
     {
-        for(auto i_function:indices)
+        for(auto index:indices)
         {
             // calculate gradient for specific function
-            std::vector<double> grad_f_i(x.size());
+            // forward difference approximation is used
+            std::vector<double> grad_fs(x.size());
             for(size_t i = 0; i < x.size(); ++i)
             {
                 std::vector<double> delta_x {x};
                 delta_x[i] += delta;
-                grad_f_i[i] = (functions[i_function](delta_x) - fs_x[i_function]) / delta;
+                grad_fs[i] = (functions[index](delta_x) - fs_x[index]) / delta;
             }
  
             // update step_size (using one-dimensional optimization)
@@ -145,7 +147,7 @@ std::vector<double> stochastic_gradient_descent(
  
             // update x
             for(size_t i = 0; i < x.size(); ++i)
-                x[i] -= step_size * grad_f_i[i];
+                x[i] -= grad_fs[i] * step_size;
  
             // update function values at x
             for(size_t i = 0; i < functions.size(); ++i)
@@ -172,7 +174,7 @@ std::vector<double> stochastic_gradient_descent(
         }
     }
  
-    std::cerr << "gradient_descent: max number of iterations are exceeded!"
+    std::cerr << "stochastic_gradient_descent: max number of iterations are exceeded!"
               << std::endl;
     return x;
 }
@@ -193,11 +195,11 @@ void test_stochastic_gradient_descent()
     const int max_iterations {10000};
     const double delta {0.001};
  
-    std::cout << "Test for stochastic gradient descent" << std::endl;
+    std::cout << "Testing stochastic gradient descent..." << std::endl;
     std::vector<double> result {stochastic_gradient_descent(functions, initial_x, step_size, tolerance, max_iterations, delta)};
  
     std::cout << "These values have to be close to zero: ";
     for(auto& i:result)
         std::cout << i << " ";
-    std::cout << std::endl;
+    std::cout << std::endl << "Test complete" << std::endl;
 }
